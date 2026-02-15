@@ -11,6 +11,11 @@ sourceSets {
   main {
     scala {
       srcDirs += getSparkSpecificSourceDir(sparkMajorVersion)
+      // Spark 4 port: Scala interpreter/REPL integration is not yet supported.
+      // Exclude the Flow Scala interpreter REST API when the repl module is not included.
+      if (findProject(':sparkling-water-repl') == null) {
+        exclude 'ai/h2o/sparkling/backend/api/scalainterpreter/**'
+      }
     }
     resources {
       srcDirs += getSparkSpecificResourceDir(sparkMajorVersion) + ["${projectDir}/flow-css"]
@@ -31,7 +36,9 @@ jar {
 dependencies {
   api(project(':sparkling-water-utils'))
   api(project(':sparkling-water-extensions'))
-  api(project(':sparkling-water-repl'))
+  if (findProject(':sparkling-water-repl') != null) {
+    api(project(':sparkling-water-repl'))
+  }
   api("ai.h2o:h2o-ext-jython-cfunc:${h2oVersion}")
   api("ai.h2o:h2o-genmodel:${h2oVersion}")
   api("ai.h2o:h2o-security:${h2oVersion}")

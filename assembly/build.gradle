@@ -11,7 +11,9 @@ description = "Sparkling Water Assembly"
 
 dependencies {
   api(project(":sparkling-water-ml"))
-  api(project(":sparkling-water-repl"))
+  if (findProject(':sparkling-water-repl') != null) {
+    api(project(":sparkling-water-repl"))
+  }
   api(project(":sparkling-water-core"))
   api(project(":sparkling-water-extensions"))
 }

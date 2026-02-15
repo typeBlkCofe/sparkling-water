@@ -36,7 +36,6 @@ ext {
   // Published projects
   publishedProjects = [
     project(':sparkling-water-api-generation'),
-    project(':sparkling-water-repl'),
     project(':sparkling-water-core'),
     project(':sparkling-water-examples'),
     project(':sparkling-water-ml'),
@@ -60,7 +59,6 @@ ext {
   // Scala projects
   scalaProjects = [
     project(':sparkling-water-api-generation'),
-    project(':sparkling-water-repl'),
     project(':sparkling-water-core'),
     project(':sparkling-water-examples'),
     project(':sparkling-water-ml'),
@@ -78,8 +76,15 @@ ext {
   rProjects = [project(':sparkling-water-r'), project(':sparkling-water-r-cran')]
   docProjects = [project(':sparkling-water-doc')]
 
-  scalaTestVersions = ['2.11': '2.2.1', '2.12': '3.0.8']
+  scalaTestVersions = ['2.11': '2.2.1', '2.12': '3.0.8', '2.13': '3.2.19']
   numpyVersions = ['3.6': '1.19.5', '3.7': '1.19.5', 'default': '1.23.5']
+}
+
+// The REPL module is not available for all Spark/Scala combinations (e.g., Spark 4 port in this branch).
+def replProject = findProject(':sparkling-water-repl')
+if (replProject != null) {
+  ext.publishedProjects += replProject
+  ext.scalaProjects += replProject
 }
 
 def versionSpecificProps = new Properties()
