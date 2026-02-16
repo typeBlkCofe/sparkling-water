@@ -12,8 +12,10 @@ sourceSets {
     scala {
       srcDirs += getSparkSpecificSourceDir(sparkMajorVersion)
       // Spark 4 port: Scala interpreter/REPL integration is not yet supported.
-      // Exclude the Flow Scala interpreter REST API when the repl module is not included.
-      if (findProject(':sparkling-water-repl') == null) {
+      // Exclude the Flow Scala interpreter REST API when:
+      // - the repl module is not included, OR
+      // - we are building for Spark 4
+      if (findProject(':sparkling-water-repl') == null || (sparkMajorVersion != null && sparkMajorVersion.startsWith("4."))) {
         exclude 'ai/h2o/sparkling/backend/api/scalainterpreter/**'
       }
     }
@@ -25,7 +27,19 @@ sourceSets {
   test {
     scala {
       // Spark 4 port: REPL module is excluded, so exclude interpreter tests as well.
-      if (findProject(':sparkling-water-repl') == null) {
+      if (findProject(':sparkling-water-repl') == null || (sparkMajorVersion != null && sparkMajorVersion.startsWith("4."))) {
+        exclude 'ai/h2o/sparkling/backend/api/scalainterpreter/**'
+      }
+    }
+  }
+}
+
+// The integTest source set (from gradle/itest.gradle) includes src/main/scala, so we must also
+// exclude the interpreter sources there to avoid compilation failures when repl is disabled.
+afterEvaluate {
+  if (sourceSets.findByName('integTest') != null) {
+    sourceSets.integTest.scala {
+      if (findProject(':sparkling-water-repl') == null || (sparkMajorVersion != null && sparkMajorVersion.startsWith("4."))) {
         exclude 'ai/h2o/sparkling/backend/api/scalainterpreter/**'
       }
     }
