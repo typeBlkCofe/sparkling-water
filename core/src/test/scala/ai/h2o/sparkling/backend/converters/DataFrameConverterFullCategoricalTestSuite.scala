@@ -45,7 +45,7 @@ class DataFrameConverterFullCategoricalTestSuite extends AnyFunSuite with Shared
   }
 
   test("PUBDEV-766 H2OFrame[T_ENUM] to DataFrame[StringType]") {
-    val df = spark.sparkContext.parallelize(Array("ONE", "ZERO", "ZERO", "ONE")).toDF("C0")
+    val df = spark.sparkContext.parallelize(Seq("ONE", "ZERO", "ZERO", "ONE")).toDF("C0")
     val h2oFrame = hc.asH2OFrame(df)
     h2oFrame.convertColumnsToCategorical(Array(0))
     assert(h2oFrame.columns(0).isCategorical())
