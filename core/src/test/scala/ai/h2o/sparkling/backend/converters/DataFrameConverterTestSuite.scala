@@ -30,12 +30,13 @@ import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{Assertions, FunSuite}
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import water.parser.Categorical
 
 @RunWith(classOf[JUnitRunner])
-class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
+class DataFrameConverterTestSuite extends AnyFunSuite with SharedH2OTestContext {
 
   override def createSparkSession(): SparkSession = sparkSession("local[*]")
   import spark.implicits._

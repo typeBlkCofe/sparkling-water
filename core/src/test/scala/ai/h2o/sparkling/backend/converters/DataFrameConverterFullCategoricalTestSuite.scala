@@ -22,12 +22,12 @@ import ai.h2o.sparkling.{H2OFrame, SharedH2OTestContext, TestUtils}
 import org.apache.spark.sql.types.{StringType, StructField}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import water.parser.Categorical
 
 @RunWith(classOf[JUnitRunner])
-class DataFrameConverterFullCategoricalTestSuite extends FunSuite with SharedH2OTestContext {
+class DataFrameConverterFullCategoricalTestSuite extends AnyFunSuite with SharedH2OTestContext {
 
   override def createSparkSession(): SparkSession = sparkSession("local[*]")
   import spark.implicits._
