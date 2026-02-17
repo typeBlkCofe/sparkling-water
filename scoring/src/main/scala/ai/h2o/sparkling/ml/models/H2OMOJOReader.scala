@@ -32,7 +32,7 @@ private[models] class H2OMOJOReader[T <: HasMojo] extends H2OReaderBase[T] {
     }
     if (model.isInstanceOf[H2OMOJOModel]) {
       val mojoModel = model.asInstanceOf[H2OMOJOModel]
-      mojoModel.h2oMojoModel = Utils.getMojoModel(mojoModel.getMojo())
+      mojoModel.h2oMojoModel = Utils.getMojoModelWithFallback(mojoModel.getMojo())
       val numberOfCVModels = mojoModel.getOrDefault(mojoModel.numberOfCrossValidationModels)
       if (numberOfCVModels > 0) {
         val cvModels = (0 until numberOfCVModels).map { i =>

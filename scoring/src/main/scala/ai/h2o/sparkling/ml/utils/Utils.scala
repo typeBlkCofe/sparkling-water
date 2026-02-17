@@ -17,8 +17,9 @@
 
 package ai.h2o.sparkling.ml.utils
 
-import java.io.File
+import java.io.{File, FileInputStream}
 
+import ai.h2o.sparkling.utils.SparkSessionUtils
 import hex.genmodel.{ModelMojoReader, MojoModel, MojoReaderBackendFactory}
 import org.apache.spark.expose.Logging
 import org.apache.spark.sql.Row
@@ -34,6 +35,27 @@ object Utils extends Logging {
         logError(s"Reading a mojo model with metadata failed. Trying to load the model without metadata...", e)
         val reader = MojoReaderBackendFactory.createReaderBackend(mojoFile.getAbsolutePath)
         ModelMojoReader.readFrom(reader, false)
+    }
+  }
+
+  /**
+   * Some Spark distributions stage model files without a recognizable extension.
+   * H2O MojoReader backend autodetection can reject those paths, so retry from
+   * a temporary file with .mojo suffix.
+   */
+  def getMojoModelWithFallback(mojoFile: File): MojoModel = {
+    try {
+      getMojoModel(mojoFile)
+    } catch {
+      case e: IOException if e.getMessage != null && e.getMessage.contains("Invalid file specification") =>
+        logWarning(
+          s"MOJO backend autodetection failed for '${mojoFile.getAbsolutePath}'. " +
+            "Retrying from a temporary .mojo copy.")
+        val tempMojoFile = SparkSessionUtils.inputStreamToTempFile(
+          new FileInputStream(mojoFile),
+          mojoFile.getName,
+          ".mojo")
+        getMojoModel(tempMojoFile)
     }
   }
 

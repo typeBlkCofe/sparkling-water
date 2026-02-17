@@ -696,7 +696,7 @@ object H2OMOJOModel
   }
 
   def createFromMojo(mojo: File, uid: String, settings: H2OMOJOSettings): H2OMOJOModel = {
-    val mojoModel = Utils.getMojoModel(mojo)
+    val mojoModel = Utils.getMojoModelWithFallback(mojo)
     val model = createSpecificMOJOModel(uid, mojoModel._algoName, mojoModel._category)
     model.setSpecificParams(mojoModel)
     model.setMojo(mojo)
@@ -723,5 +723,6 @@ abstract class H2OSpecificMOJOLoader[T <: ai.h2o.sparkling.ml.models.HasMojo: Cl
 }
 
 object H2OMOJOCache extends H2OMOJOBaseCache[MojoModel] {
-  override def loadMojoBackend(mojo: File, configMap: Map[String, Any]): MojoModel = Utils.getMojoModel(mojo)
+  override def loadMojoBackend(mojo: File, configMap: Map[String, Any]): MojoModel =
+    Utils.getMojoModelWithFallback(mojo)
 }
