@@ -17,7 +17,7 @@
 
 package ai.h2o.sparkling.ml.utils
 
-import java.io.{File, FileInputStream}
+import java.io.{File, FileInputStream, IOException}
 
 import ai.h2o.sparkling.utils.SparkSessionUtils
 import hex.genmodel.{ModelMojoReader, MojoModel, MojoReaderBackendFactory}
