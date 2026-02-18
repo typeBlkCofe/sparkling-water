@@ -45,7 +45,7 @@ class H2OTargetEncoderMOJOModel(override val uid: String)
   def this() = this(Identifiable.randomUID(getClass.getSimpleName))
 
   @transient private lazy val inOutMapping: Map[Seq[String], (Seq[String], Int)] = {
-    val mojoModel = Utils.getMojoModelWithFallback(getMojo()).asInstanceOf[TargetEncoderMojoModel]
+    val mojoModel = Utils.getMojoModel(getMojo()).asInstanceOf[TargetEncoderMojoModel]
     mojoModel._inoutMapping.asScala.zipWithIndex.map {
       case (entry, index) => (entry.from.toList, (entry.to.toList, index))
     }.toMap
@@ -89,7 +89,7 @@ case class H2OTargetEncoderMOJOUdfWrapper(
     outputCols: Array[String],
     problemType: H2OTargetEncoderProblemType) {
 
-  @transient private lazy val mojoModel = Utils.getMojoModelWithFallback(mojoGetter()).asInstanceOf[TargetEncoderMojoModel]
+  @transient private lazy val mojoModel = Utils.getMojoModel(mojoGetter()).asInstanceOf[TargetEncoderMojoModel]
   @transient private lazy val easyPredictModelWrapper: EasyPredictModelWrapper = {
     val config = new EasyPredictModelWrapper.Config()
     config.setModel(mojoModel)
