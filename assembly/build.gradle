@@ -16,6 +16,9 @@ dependencies {
   }
   api(project(":sparkling-water-core"))
   api(project(":sparkling-water-extensions"))
+  // Bundle fabric8 kubernetes-client for Kubernetes 1.35 support (overrides Spark's older version).
+  // fabric8 7.x uses Vert.x HTTP client by default (not OkHttp); transitive deps constrained via dependency-constraints.json.
+  api("io.fabric8:kubernetes-client:${fabricK8sClientVersion}")
 }
 
 //
