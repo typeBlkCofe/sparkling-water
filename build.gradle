@@ -177,9 +177,12 @@ configure(subprojects) { project ->
       url "https://oss.sonatype.org/content/repositories/releases/"
     }
 
-    // Snapshot repository of H2O builds
+    // Snapshot repository of H2O builds (exclusive: only for ai.h2o to avoid 403 on other artifacts)
     maven {
       url "https://h2o-release.s3.amazonaws.com/h2o/master/$h2oBuild/maven/repo/"
+      content {
+        includeGroup "ai.h2o"
+      }
     }
 
     if (sparkVersion.endsWith("-SNAPSHOT")) {
