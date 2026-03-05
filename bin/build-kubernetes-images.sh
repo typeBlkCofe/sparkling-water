@@ -112,12 +112,6 @@ if [ "$1" = "external-backend" ]; then
   echo "Done!"
   exit 0
 fi
-# Debug: this is a change i did to build locally on mac
-# (cd "$SPARK_HOME" && \
-#  TMP_SPARK_R_DOCKERFILE=$(mktemp) && \
-#  sed  "s/apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'/apt-key adv --keyserver keyserver.ubuntu.com --recv-key FCAE2A0E115C3D8A/g" ./kubernetes/dockerfiles/spark/bindings/R/Dockerfile >> "$TMP_SPARK_R_DOCKERFILE" && \
-#  ./bin/docker-image-tool.sh -t "$INSTALLED_SPARK_FULL_VERSION" -p ./kubernetes/dockerfiles/spark/bindings/python/Dockerfile -R "$TMP_SPARK_R_DOCKERFILE" -b java_image_tag=17-jammy build && \
-#  rm "$TMP_SPARK_R_DOCKERFILE")
 
 if [ "$1" = "python" ]; then
   (cd "$SPARK_HOME" && \
