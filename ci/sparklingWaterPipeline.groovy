@@ -134,14 +134,17 @@ XMLEOF
 
         def isSpark4 = sparkMajorVersion.startsWith("4")
 
-        // Spark 4 uses Scala 2.13 only (no -Pscala-2.12) and Jakarta servlet (no Jetty 9 override)
+        // Version-specific Maven overrides:
+        // - Spark 3.x: Scala 2.12, Hadoop 3.3.6, Jetty 9.x, Netty, Protobuf overrides needed
+        // - Spark 4.x: Scala 2.13 only, Hadoop 3.4.2, no Jetty (uses Jakarta), ships newer Netty/Protobuf
         def scalaProfile = isSpark4 ? "" : "-Pscala-2.12"
-        def jettyOverride = isSpark4 ? "" : "-Djetty.version=9.4.57.v20241219"
+        def hadoopVersion = isSpark4 ? "3.4.2" : "3.3.6"
+        def spark3Overrides = isSpark4 ? "" : "-Djetty.version=9.4.57.v20241219 -Dnetty.version=4.1.125.Final -Dprotobuf.version=3.25.5"
 
         sh """
             cd spark
             ./dev/make-distribution.sh --tgz -Phadoop-3 ${scalaProfile} -Pkubernetes -Dmaven.test.skip=true \\
-              -Dhadoop.version=3.4.2 ${jettyOverride} -Divy.version=2.5.2 \\
+              -Dhadoop.version=${hadoopVersion} ${spark3Overrides} -Divy.version=2.5.2 \\
               -Dguava.version=32.0.1-jre \\
               -Dlibthrift.version=0.14.0 -Dzookeeper.version=3.7.2 \\
               -Dcommons-compress.version=1.26.0 \\
