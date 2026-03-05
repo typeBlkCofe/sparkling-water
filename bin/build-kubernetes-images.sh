@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-if [[ "$#" -ne 1 ]] || [[ "$1" != "scala" && "$1" != "python" && "$1" != "r"  && "$1" != "external-backend" ]]; then
-  echo "This script expects exactly one argument which specifies type of image to be build."
-  echo "The possible values are: scala, r, python, external-backend"
+if [[ "$#" -lt 1 ]] || [[ "$1" != "scala" && "$1" != "python" && "$1" != "r" && "$1" != "external-backend" && "$1" != "hardened" ]]; then
+  echo "This script expects at least one argument which specifies type of image to be built."
+  echo "The possible values are: scala, r, python, external-backend, hardened"
   exit 1
 fi
 
@@ -35,6 +35,69 @@ resolve_k8_path() {
     echo "$K8DIR/$rel_path"
   fi
 }
+
+if [ "$1" = "hardened" ]; then
+  echo "Building Hardened Docker Image for Sparkling Water ..."
+  DOCKERFILE="$K8DIR/Dockerfile-Hardened"
+  if [ ! -f "$DOCKERFILE" ]; then
+    echo "ERROR: $DOCKERFILE not found"
+    exit 1
+  fi
+
+  mkdir -p "$WORKDIR/spark-jars" "$WORKDIR/spark-python" "$WORKDIR/spark-bin" \
+           "$WORKDIR/spark-sbin" "$WORKDIR/spark-entrypoint"
+
+  # Copy Spark JARs
+  cp "$SPARK_HOME"/jars/*.jar "$WORKDIR/spark-jars/"
+
+  # Remove fabric8 6.x so the assembly's 7.x is used
+  rm -fv "$WORKDIR"/spark-jars/kubernetes-client*.jar \
+         "$WORKDIR"/spark-jars/kubernetes-model*.jar \
+         "$WORKDIR"/spark-jars/volcano*.jar 2>/dev/null || true
+
+  # Download hadoop-aws + AWS SDK bundle if missing
+  HADOOP_VERSION="${HADOOP_VERSION:-3.4.2}"
+  if [ -z "$(ls "$WORKDIR"/spark-jars/hadoop-aws-*.jar 2>/dev/null)" ]; then
+    curl -fL -o "$WORKDIR/spark-jars/hadoop-aws-${HADOOP_VERSION}.jar" \
+      "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${HADOOP_VERSION}/hadoop-aws-${HADOOP_VERSION}.jar"
+  fi
+  if [ -z "$(ls "$WORKDIR"/spark-jars/aws-java-sdk-bundle-*.jar 2>/dev/null)" ]; then
+    curl -fL -o "$WORKDIR/spark-jars/aws-java-sdk-bundle-1.12.797.jar" \
+      "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.797/aws-java-sdk-bundle-1.12.797.jar"
+  fi
+
+  # Spark python / bin / sbin / entrypoint
+  cp -r "$SPARK_HOME"/python/* "$WORKDIR/spark-python/" 2>/dev/null || true
+  cp -r "$SPARK_HOME"/bin/* "$WORKDIR/spark-bin/"
+  chmod +x "$WORKDIR"/spark-bin/* || true
+  cp -r "$SPARK_HOME"/sbin/* "$WORKDIR/spark-sbin/" 2>/dev/null || true
+
+  if [ -f "$SPARK_HOME/kubernetes/dockerfiles/spark/entrypoint.sh" ]; then
+    cp "$SPARK_HOME/kubernetes/dockerfiles/spark/entrypoint.sh" "$WORKDIR/spark-entrypoint/"
+  elif [ -f "$SPARK_HOME/bin/entrypoint.sh" ]; then
+    cp "$SPARK_HOME/bin/entrypoint.sh" "$WORKDIR/spark-entrypoint/"
+  else
+    echo "ERROR: entrypoint.sh not found in SPARK_HOME"
+    exit 1
+  fi
+  chmod +x "$WORKDIR/spark-entrypoint/entrypoint.sh"
+
+  # Copy assembly JAR
+  cp "$FAT_JAR_FILE" "$WORKDIR/sparkling-water-assembly.jar"
+
+  # Copy PySparkling zip
+  cp "$PY_ZIP_FILE" "$WORKDIR/"
+
+  docker build --pull --progress=plain \
+    --build-arg HADOOP_VERSION="${HADOOP_VERSION}" \
+    --build-arg PYSPARK_VERSION="${INSTALLED_SPARK_FULL_VERSION}" \
+    -t "sparkling-water-hardened:$VERSION" \
+    -f "$DOCKERFILE" "$WORKDIR"
+
+  echo "Done! Image: sparkling-water-hardened:$VERSION"
+  rm -rf "$WORKDIR"
+  exit 0
+fi
 
 if [ "$1" = "external-backend" ]; then
   cp "$(resolve_k8_path Dockerfile-External-backend)" "$WORKDIR"
