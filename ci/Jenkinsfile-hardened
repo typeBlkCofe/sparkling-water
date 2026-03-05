@@ -4,14 +4,10 @@
 // This pipeline builds Spark from source with security patches, builds the
 // Sparkling Water assembly + PySparkling, then produces a hardened Docker image
 // on Amazon Linux 2023 with full CVE remediation.
-//
-// Temporary stages for testing: Mend scanning, ECR push (remove before OSS PR).
-
-@Library('earnix-pipeline-library') _
 
 pipeline {
     agent {
-        label 'linux-build-amazon2-xlarge-java17'
+        label 'linux && docker'
     }
     environment {
         MAVEN_OPTS = '-Xss128m -Xmx8g -XX:ReservedCodeCacheSize=2g'
@@ -22,10 +18,6 @@ pipeline {
     }
     parameters {
         string(name: 'SPARK_MAJOR_VERSION', defaultValue: '4.1', description: 'Spark major version (e.g. 3.5, 4.0, 4.1)')
-        booleanParam(name: 'RunMendScans', defaultValue: false, description: 'Run Mend vulnerability scans')
-        booleanParam(name: 'PushToECR', defaultValue: false, description: 'Push image to ECR')
-        string(name: 'REGISTRY', defaultValue: '587217771608.dkr.ecr.eu-west-1.amazonaws.com', description: 'ECR registry')
-        string(name: 'AWS_REGION', defaultValue: 'eu-west-1', description: 'AWS region')
     }
     stages {
         stage('Prepare Environment') {
@@ -94,32 +86,6 @@ pipeline {
                 sh './gradlew :sparkling-water-py:distPython -x check --no-daemon'
             }
         }
-        stage('Mend Scan JARs') {
-            when {
-                expression { params.RunMendScans == true }
-            }
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'mend_user_key', passwordVariable: 'mend_user_key', usernameVariable: 'mend_user')]) {
-                        sh '''
-                            if ! command -v /usr/local/bin/mend &>/dev/null; then
-                                sudo curl -fsSL https://downloads.mend.io/cli/linux_amd64/mend -o /usr/local/bin/mend
-                                sudo chmod +x /usr/local/bin/mend
-                            fi
-                            export MEND_USER_KEY=${mend_user_key}
-                            export MEND_EMAIL=menduser@earnix.com
-                            export MEND_URL=https://saas.whitesourcesoftware.com
-
-                            SW_JARS_DIR="assembly/build/libs"
-                            /usr/local/bin/mend dependencies \
-                                --dir "${SW_JARS_DIR}" \
-                                --scope "*//Sparkling-Water//Sparkling-Water-Assembly" \
-                                --update --non-interactive
-                        '''
-                    }
-                }
-            }
-        }
         stage('Build Hardened Docker Image') {
             steps {
                 script {
@@ -133,42 +99,8 @@ pipeline {
                         sparkVersion: sparkVersion
                     ]
                     env.HARDENED_IMAGE = pipeline.buildHardenedDockerImage(config)
+                    echo "Built hardened image: ${env.HARDENED_IMAGE}"
                 }
-            }
-        }
-        stage('Mend Scan Docker Image') {
-            when {
-                expression { params.RunMendScans == true }
-            }
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'mend_user_key', passwordVariable: 'mend_user_key', usernameVariable: 'mend_user')]) {
-                        sh """
-                            export MEND_USER_KEY=\${mend_user_key}
-                            export MEND_EMAIL=menduser@earnix.com
-                            export MEND_URL=https://saas.whitesourcesoftware.com
-
-                            SCAN_IMAGE="${env.HARDENED_IMAGE}-build\${BUILD_NUMBER}"
-                            docker tag "${env.HARDENED_IMAGE}" "\${SCAN_IMAGE}"
-                            /usr/local/bin/mend --non-interactive image "\${SCAN_IMAGE}" --no-upload --filter CRITICAL,HIGH
-                        """
-                    }
-                }
-            }
-        }
-        stage('Push to ECR') {
-            when {
-                expression { params.PushToECR == true }
-            }
-            steps {
-                sh """
-                    aws ecr get-login-password --region ${params.AWS_REGION} | \\
-                        docker login --username AWS --password-stdin ${params.REGISTRY}
-                    IMAGE_TAG="hardened-\${BUILD_NUMBER}"
-                    docker tag "${env.HARDENED_IMAGE}" ${params.REGISTRY}/sparkling-water-scala:\${IMAGE_TAG}
-                    docker push ${params.REGISTRY}/sparkling-water-scala:\${IMAGE_TAG}
-                    echo "Pushed: ${params.REGISTRY}/sparkling-water-scala:\${IMAGE_TAG}"
-                """
             }
         }
     }
