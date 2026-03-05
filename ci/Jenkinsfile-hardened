@@ -165,9 +165,9 @@ pipeline {
                     aws ecr get-login-password --region ${params.AWS_REGION} | \\
                         docker login --username AWS --password-stdin ${params.REGISTRY}
                     IMAGE_TAG="hardened-\${BUILD_NUMBER}"
-                    docker tag "${env.HARDENED_IMAGE}" ${params.REGISTRY}/sparkling-water-hardened:\${IMAGE_TAG}
-                    docker push ${params.REGISTRY}/sparkling-water-hardened:\${IMAGE_TAG}
-                    echo "Pushed: ${params.REGISTRY}/sparkling-water-hardened:\${IMAGE_TAG}"
+                    docker tag "${env.HARDENED_IMAGE}" ${params.REGISTRY}/sparkling-water-scala:\${IMAGE_TAG}
+                    docker push ${params.REGISTRY}/sparkling-water-scala:\${IMAGE_TAG}
+                    echo "Pushed: ${params.REGISTRY}/sparkling-water-scala:\${IMAGE_TAG}"
                 """
             }
         }
