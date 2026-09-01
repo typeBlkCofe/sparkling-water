@@ -128,7 +128,7 @@ configure(allprojects) { project ->
   apply plugin: 'idea'
   apply plugin: 'eclipse'
   apply from: "$rootDir/gradle/artifacts.gradle"
-  apply plugin: "com.diffplug.gradle.spotless"
+  apply plugin: "com.diffplug.spotless"
   // Version of main components
   ext {
     scalaVersion = loadVersionSpecificProp("scalaVersion", versionSpecificProps)
