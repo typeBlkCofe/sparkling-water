@@ -25,11 +25,11 @@ dependencies {
     api("commons-beanutils:commons-beanutils:1.11.0") {
       because "Fixes CVE-2025-48734 in commons-beanutils"
     }
-    api("org.eclipse.jetty:jetty-server:9.4.57.v20241219") {
-      because "Fixes CVE-2024-13009 in jetty-server"
+    api("org.eclipse.jetty:jetty-server:9.4.58.v20250814") {
+      because "Fixes CVE-2024-13009, CVE-2026-2332 (max available on Central for H2O-shaded Jetty 9 line)"
     }
-    api("org.eclipse.jetty:jetty-servlets:9.4.57.v20241219") {
-      because "Fixes CVE-2024-9823 in jetty-servlets"
+    api("org.eclipse.jetty:jetty-servlets:9.4.58.v20250814") {
+      because "Fixes CVE-2024-9823 (max available on Central for H2O-shaded Jetty 9 line)"
     }
     api("org.apache.mina:mina-core:2.2.4") {
       because "Fixes CVE-2024-52046 (CRITICAL) in mina-core"
@@ -41,10 +41,6 @@ dependencies {
       because "fabric8 kubernetes-client 7.x default HTTP client; align with fabric8 BOM"
     }
   }
-  // END AUTO-CONSTRAINTS (runtime-dockyard)
-
-  // END AUTO-CONSTRAINTS (runtime-dockyard)
-
   // END AUTO-CONSTRAINTS (runtime-dockyard)
 
   if (findProject(':sparkling-water-repl') != null) {
