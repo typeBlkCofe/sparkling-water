@@ -161,7 +161,9 @@ apply plugin: "com.diffplug.spotless"
 
 spotless {
     scala {
-        scalafmt().configFile("$rootDir/.scalafmt.conf")
+        // Pin to match .scalafmt.conf; do not inherit Spotless's default or a plugin bump will
+        // silently change the formatter the way 4.4.0 (2.0.1) -> 6.25.0 (3.7.3) did.
+        scalafmt('3.7.3').configFile("$rootDir/.scalafmt.conf")
     }
     java {
         googleJavaFormat()
