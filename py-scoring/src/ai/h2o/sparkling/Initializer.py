@@ -159,8 +159,8 @@ class Initializer(object):
         if zipfile.is_zipfile(packagePath):
             return Initializer.__extracted_jar_path(sc)
         else:
-            from pkg_resources import resource_filename
-            return os.path.abspath(resource_filename("sparkling_water", BackingJar.getName()))
+            import sparkling_water
+            return os.path.abspath(os.path.join(os.path.dirname(sparkling_water.__file__), BackingJar.getName()))
 
     @staticmethod
     def __get_logger(jvm):
@@ -192,11 +192,12 @@ class Initializer(object):
 
     @staticmethod
     def isRunningViaDBCConnect():
-        import pkg_resources as pkg
+        # setuptools 82+ dropped this module; importlib.metadata is stdlib on 3.11+.
+        from importlib.metadata import PackageNotFoundError, distribution
         try:
-            pkg.get_distribution('databricks-connect')
+            distribution('databricks-connect')
             return True
-        except:
+        except PackageNotFoundError:
             return False
 
     @staticmethod
