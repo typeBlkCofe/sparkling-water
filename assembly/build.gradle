@@ -48,9 +48,13 @@ dependencies {
   }
   api(project(":sparkling-water-core"))
   api(project(":sparkling-water-extensions"))
-  // Bundle fabric8 kubernetes-client for Kubernetes 1.35 support (overrides Spark's older version).
-  // fabric8 7.x uses Vert.x HTTP client by default (not OkHttp); transitive deps constrained via dependency-constraints.json.
-  api("io.fabric8:kubernetes-client:${fabricK8sClientVersion}")
+  // fabric8 kubernetes-client is deliberately NOT bundled here. Spark supplies it (4.2.0 ships
+  // 7.6.1) and spark-kubernetes is compiled against that exact version, so bundling a second copy
+  // can only ever pin it backwards. Doing so split the classpath at runtime: the assembly's
+  // kubernetes-client-api lost to Spark's newer kubernetes-httpclient-vertx, and
+  // VertxHttpClientBuilder.build() died with NoSuchFieldError: tlsServerName (the field was added
+  // to StandardHttpClientBuilder in 7.6.0). Sparkling Water only touches fabric8 in the K8s
+  // external backend, which declares it compileOnly in core/build.gradle.
 }
 
 //
